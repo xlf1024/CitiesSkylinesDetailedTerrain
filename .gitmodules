@@ -1,0 +1,3 @@
+[submodule "DetailedTerrain/KianCommons"]
+	path = DetailedTerrain/KianCommons
+	url = https://github.com/kianzarrin/KianCommons
