@@ -45,9 +45,9 @@ namespace DetailedTerrain.Patches {
         static Dictionary<MethodBase, Dictionary<FieldInfo, int>> intFieldMap;
         static Dictionary<MethodBase, Dictionary<FieldInfo, float>> floatFieldMap;
         static void InitMaps() {
-            int p = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
+            int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
             //int f = 1 << p
-            float f = Mathf.Pow(2, p);
+            float df = Mathf.Pow(2, dp);
             intMap = new() { };
             floatMap = new() { };
             intFieldMap = new() { };
@@ -57,50 +57,50 @@ namespace DetailedTerrain.Patches {
                 intMap.Add(
                     DebugValue(AccessTools.Method("SurfacePainter.Detours.TerrainManagerDetour:GetSurfaceCell")),
                     new() {
-                        { 480, (int)(480 * f) },
-                        { 479, (int)(480 * f - 1) }
+                        { 480, (int)(480 * df) },
+                        { 479, (int)(480 * df - 1) }
                     });
                 floatMap.Add(
                     DebugValue(AccessTools.Method("SurfacePainter.Detours.TerrainManagerDetour:GetSurfaceCell")),
                     new() {
-                        { 0.25f, 0.25f / (float)f }
+                        { 0.25f, 0.25f / (float)df }
                     });
                 intMap.Add(DebugValue(AccessTools.Constructor(AccessTools.TypeByName("SurfacePainter.SurfaceManager"), null, true)),
                     new() {
-                        { 4, (int)(4 / f) },
-                        { 480, (int)(480 * f) },
-                        { 480 * 9, (int)(480 * 9 * f) }
+                        { 4, (int)(4 / df) },
+                        { 480, (int)(480 * df) },
+                        { 480 * 9, (int)(480 * 9 * df) }
                     });
                 intFieldMap.Add(DebugValue(AccessTools.Method("SurfacePainter.SurfaceManager:GetSurfaceItem")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * f) },
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * f) }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * df) },
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * df) }
                     });
                 intFieldMap.Add(DebugValue(AccessTools.Method("SurfacePainter.SurfaceManager:MigrateItems")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * f) }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * df) }
                     });
                 intFieldMap.Add(DebugValue(AccessTools.Method("SurfacePainter.SurfaceManager:SetSurfaceItem")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * f) },
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * f) }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * df) },
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * df) }
                     });
                 intFieldMap.Add(DebugValue(AccessTools.PropertyGetter("SurfacePainter.SurfaceManager:Surfaces")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * f) },
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * f) }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * df) },
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_PER_AREA")), (int)(480 * df) }
                     });
                 intMap.Add(DebugValue(AccessTools.Method("SurfacePainter.InGameSurfaceTool:ApplyBrush")),
                     new() {
-                        { 4, (int)(4 * f) }
+                        { 4, (int)(4 * df) }
                     });
                 intFieldMap.Add(DebugValue(AccessTools.Method("SurfacePainter.InGameSurfaceTool:ApplyBrush")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * f) }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:GRID_SIZE")), (int)(480 * 9 * df) }
                     });
                 floatFieldMap.Add(DebugValue(AccessTools.Method("SurfacePainter.InGameSurfaceTool:ApplyBrush")),
                     new() {
-                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:CELL_SIZE")), 4 / (float) f }
+                        { DebugValue(AccessTools.Field("SurfacePainter.SurfaceManager:CELL_SIZE")), 4 / (float) df }
                     });
 
             }

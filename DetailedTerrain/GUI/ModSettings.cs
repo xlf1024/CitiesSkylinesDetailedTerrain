@@ -17,7 +17,7 @@ namespace DetailedTerrain.GUI {
         public const string FILE_NAME = nameof(DetailedTerrain);
         public static DetailedTerrainConfig settings;
         private static UIComponent settingsWindow = null;
-        private static UITextField factorField;
+        private static UITextField detailFactorField;
         static ModSettings() {
             settings = DetailedTerrainConfig.Deserialize() ?? new DetailedTerrainConfig();
         }
@@ -30,7 +30,7 @@ namespace DetailedTerrain.GUI {
 
             settingsWindow.eventVisibilityChanged += OnSettingsWindowVisibilityChanged;
 
-            factorField = helper.AddTextfield("Resolution factor. Must be a power of two. Can only be changed in the main menu.", Mathf.Pow(2, settings.detailedMeshPower).ToString(), value => { }, value => {
+            detailFactorField = helper.AddTextfield("Resolution factor. Must be a power of two. Can only be changed in the main menu.", Mathf.Pow(2, settings.detailedMeshPower).ToString(), value => { }, value => {
                 value = value.Replace(",", ".");
                 if (Single.TryParse(value, out float newValue)) {
                     int newPower = Mathf.RoundToInt(Mathf.Log(newValue, 2));
@@ -40,13 +40,13 @@ namespace DetailedTerrain.GUI {
                         OnSettingsChanged();
                     }
                 }
-                if (factorField is not null) factorField.text = Mathf.Pow(2, settings.detailedMeshPower).ToString();
+                if (detailFactorField is not null) detailFactorField.text = Mathf.Pow(2, settings.detailedMeshPower).ToString();
             }) as UITextField;
-            factorField.numericalOnly = true;
-            factorField.allowFloats = true;
-            factorField.allowNegative = false;
+            detailFactorField.numericalOnly = true;
+            detailFactorField.allowFloats = true;
+            detailFactorField.allowNegative = false;
             if (!Helpers.InStartupMenu) {
-                factorField.Disable();
+                detailFactorField.Disable();
             }
 
         }
@@ -61,7 +61,7 @@ namespace DetailedTerrain.GUI {
             Log.Debug("DetailedTerrain: OnSettingsChanged");
             settings.Serialize();
             LifeCycle.LifeCycle.Repatch();
-            if (factorField is not null) factorField.text = Mathf.Pow(2, settings.detailedMeshPower).ToString();
+            if (detailFactorField is not null) detailFactorField.text = Mathf.Pow(2, settings.detailedMeshPower).ToString();
         }
 
         internal static void RemoveEventListeners() {

@@ -11,37 +11,37 @@ namespace DetailedTerrain.Patches {
         static Dictionary<FieldInfo, int> arraySizes;
 
         static void InitMap() {
-            int p = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
+            int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
             //int f = 1 << p
-            float f = UnityEngine.Mathf.Pow(2, p);
+            float df = UnityEngine.Mathf.Pow(2, dp);
             arraySizes = new() {
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_detailHeights)),
-                    (int)((480 * f + 1) * (480 * f + 1) * GameAreaManager.instance.MaxAreaCount)
+                    (int)((480 * df + 1) * (480 * df + 1) * GameAreaManager.instance.MaxAreaCount)
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_detailHeights2)),
-                    (int)((480 * f + 1) * (480 * f + 1) * GameAreaManager.instance.MaxAreaCount)
+                    (int)((480 * df + 1) * (480 * df + 1) * GameAreaManager.instance.MaxAreaCount)
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_detailSurface)),
-                    (int)((480 * f) * (480 * f) * GameAreaManager.instance.MaxAreaCount)
+                    (int)((480 * df) * (480 * df) * GameAreaManager.instance.MaxAreaCount)
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_detailZones)),
-                    (int)((480 * f) * (480 * f) * GameAreaManager.instance.MaxAreaCount)
+                    (int)((480 * df) * (480 * df) * GameAreaManager.instance.MaxAreaCount)
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_tempHeights)),
-                    (int)((512 * f + 1) * (512 * f + 1))
+                    (int)((512 * df + 1) * (512 * df + 1))
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_tempSurface)),
-                    (int)((512 * f + 1) * (512 * f + 1))
+                    (int)((512 * df + 1) * (512 * df + 1))
                 },
                 {
                     AccessTools.Field(typeof(TerrainManager), nameof(TerrainManager.m_tempZones)),
-                    (int)((512 * f + 1) * (512 * f + 1))
+                    (int)((512 * df + 1) * (512 * df + 1))
                 }
 
             };
@@ -72,14 +72,14 @@ namespace DetailedTerrain.Patches {
                         }
                     }
                 }
-                int p = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
+                int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
                 var rawBoundsField = DebugValue(AccessTools.Field(typeof(TerrainManager), "m_rawBounds"));
                 if (rawBoundsField.GetValue(TerrainManager.instance) is not null) {
                     var rawBoundsValue = rawBoundsField.GetValue(TerrainManager.instance) as TerrainManager.CellBounds[][];
-                    if (rawBoundsValue.Length != 5 + p) {
-                        rawBoundsValue = new TerrainManager.CellBounds[5 + p][];
+                    if (rawBoundsValue.Length != 5 + dp) {
+                        rawBoundsValue = new TerrainManager.CellBounds[5 + dp][];
                         int num = 81;
-                        for (int i = 0; i <= 4 + p; i++) {
+                        for (int i = 0; i <= 4 + dp; i++) {
                             rawBoundsValue[i] = new TerrainManager.CellBounds[num];
                             num <<= 2;
                         }

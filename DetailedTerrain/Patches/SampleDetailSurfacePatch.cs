@@ -16,13 +16,13 @@ namespace DetailedTerrain.Patches {
      * */
     class SampleDetailSurfacePatch {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> codesEnumerable) {
-            int p = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
-            int f = 1 << p;
+            int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
+            int df = 1 << dp;
             var codes = codesEnumerable.ToList();
             int constLocalIndex = -1;
             for(int i = 0; i<codes.Count; i++) {
                 var code = codes[i];
-                if(code.LoadsConstant(4320) || code.LoadsConstant(4320 * f)) {
+                if(code.LoadsConstant(4320) || code.LoadsConstant(4320 * df)) {
                     //find the local variable that stores 4320
                     Log.Debug("found load constant 4320");
                     yield return code;
