@@ -58,6 +58,7 @@
     <Reference Include="Assembly-CSharp" />
     <Reference Include="ColossalManaged" />
     <Reference Include="ICities" />
+    <Reference Include="ICSharpCode.SharpZipLib" />
     <Reference Include="UnityEngine" />
     <Reference Include="UnityEngine.Networking" />
     <Reference Include="UnityEngine.UI" />
