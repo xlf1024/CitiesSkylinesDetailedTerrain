@@ -14,7 +14,11 @@ namespace DetailedTerrain.Data {
 
         [DefaultValue(2)]
         public int detailedMeshPower = 2;
+        public float detailedMeshFactor => UnityEngine.Mathf.Pow(2, detailedMeshPower);
 
+        [DefaultValue(1)]
+        public int baseMeshPower = 1;
+        public float baseMeshFactor => UnityEngine.Mathf.Pow(2, baseMeshPower);
 
         // From LoadOrderMod
         public void Serialize() {

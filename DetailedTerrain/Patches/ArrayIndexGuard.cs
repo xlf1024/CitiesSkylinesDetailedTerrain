@@ -41,7 +41,7 @@ namespace DetailedTerrain.Patches {
 
         static IEnumerable<MethodBase> TargetMethods() {
             var targetMethods = new HashSet<MethodBase>();
-            targetMethods.AddRange(ReplaceTerrainManagerDetailConstantsPatch.TargetMethods());
+            targetMethods.AddRange(ReplaceTerrainConstantsPatch.TargetMethods());
             targetMethods.AddRange(SurfacePainterReplaceDetailConstantsPatch.TargetMethods());
             return targetMethods;
         }

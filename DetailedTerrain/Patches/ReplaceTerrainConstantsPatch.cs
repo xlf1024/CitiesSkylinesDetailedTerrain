@@ -1,3 +1,9 @@
+/*TODO:
+ * - base resolution: everything after TerrainPatch::Refresh
+ * - inspect water sim
+ * - check everything else for typical constants
+ */
+
 namespace DetailedTerrain.Patches {
     using HarmonyLib;
     using JetBrains.Annotations;
@@ -32,7 +38,7 @@ namespace DetailedTerrain.Patches {
     [HarmonyDebug]
 #endif
     [HarmonyPriority(Priority.Last)]
-    class ReplaceTerrainManagerDetailConstantsPatch {
+    class ReplaceTerrainConstantsPatch {
         static T DebugValue<T>(T value) {
 #if DEBUG
             UnityEngine.Debug.Log(value);
@@ -43,8 +49,9 @@ namespace DetailedTerrain.Patches {
         static Dictionary<MethodBase, Dictionary<float, float>> floatMap;
         static void InitMaps() {
             int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
-            //int f = 1 << p
-            float df = UnityEngine.Mathf.Pow(2, dp);
+            float df = DetailedTerrain.GUI.ModSettings.settings.detailedMeshFactor;
+            int bp = DetailedTerrain.GUI.ModSettings.settings.baseMeshPower;
+            float bf = DetailedTerrain.GUI.ModSettings.settings.baseMeshFactor;
             intMap = new() {
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), "Awake")),
@@ -53,7 +60,42 @@ namespace DetailedTerrain.Patches {
                         { 480 * 480, (int)(480 * df * 480 * df) },
                         { 513 * 513, (int)((512 * df + 1) * (512 * df + 1)) },
                         { 4, 4 + dp }, // patch rendering levels
-                        { 5, 5 + dp } // patch rendering levels
+                        { 5, 5 + dp }, // patch rendering levels
+                        { (120 * 9 + 1) * (120 * 9 + 1), (int)((120 * bf * 9 + 1) * (120 * bf * 9 + 1)) },
+                        { (120 * 9 + 1) * (120 * 9 + 1) * 3 + 1, (int)((120 * bf * 9 + 1) * (120 * bf * 9 + 1) * 3 + 1) },
+                        { (120 * 9) * (120 * 9), (int)((120 * bf * 9) * (120 * bf * 9)) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (128 + 1), (int)(128 * bf + 1) },
+                        { (128), (int)(128 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateAreaHeight))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateWaterFlow))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateWaterProximity))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CountWaterCoverage))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
                     }
                 },
                 {
@@ -61,6 +103,13 @@ namespace DetailedTerrain.Patches {
                     new() {
                         { 480, (int)(480 * df) },
                         { 481, (int)(480 * df + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetClosestWaterPos))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
                     }
                 },
                 {
@@ -78,6 +127,21 @@ namespace DetailedTerrain.Patches {
                     }
                 },
                 {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetHeightmap))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { (120 * 9 + 1) * (120 * 9 + 1) * 2, (int)((120 * bf * 9 + 1) * (120 * bf * 9 + 1) * 2) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetShorePos))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceCell))),
                     new() {
                         { 480, (int)(480 * df) },
@@ -85,9 +149,95 @@ namespace DetailedTerrain.Patches {
                     }
                 },
                 {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceHeight), new[] { typeof(int), typeof(int), typeof(uint), typeof(float), typeof(float) })),
+                    new() {
+                        { 120, (int)(120 * bf) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 128 / 2, (int)(128 * bf / 2) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceHeight), new[] { typeof(int), typeof(int), typeof(WaterSimulation.Cell[]), typeof(float) })),
+                    new() {
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceHeight2), new[] { typeof(int), typeof(int), typeof(uint), typeof(float), typeof(float), typeof(bool).MakeByRefType() })),
+                    new() {
+                        { 120, (int)(120 * bf) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 128 / 2, (int)(128 * bf / 2) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceHeight2), new[] { typeof(int), typeof(int), typeof(WaterSimulation.Cell[]), typeof(float), typeof(bool).MakeByRefType() })),
+                    new() {
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetZoneCell))),
                     new() {
                         { 480, (int)(480 * df) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.HasWater), new[] { typeof(UnityEngine.Vector2) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.HasWater), new[] { typeof(ColossalFramework.Math.Segment2), typeof(float), typeof(bool) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.RayCast))),
+                    new() {
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { (120 * 9 - 1), (int)(120 * bf * 9 - 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), "RayCastEdge")),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { (120 * 9 + 1) * (120 * 9), (int)((120 * bf * 9 + 1) * (120 * bf * 9)) },
+                        { (120 * 9 + 2) * (120 * 9), (int)((120 * bf * 9 + 2) * (120 * bf * 9)) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), "RefreshPatchFlatness")),
+                    new() {
+                        { (120), (int)(120 * bf) },
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeight))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeightSmooth), new[] { typeof(float), typeof(float) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeightSmoothWithWater), new[] { typeof(float), typeof(float), typeof(bool), typeof(float), typeof(bool).MakeByRefType() })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) }
                     }
                 },
                 {
@@ -118,36 +268,166 @@ namespace DetailedTerrain.Patches {
                     }
                 },
                 {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleFinalHeight))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleFinalHeightSmooth))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleOriginalRawHeightSmooth), new[] { typeof(float), typeof(float) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeight))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightSmooth), new[] { typeof(float), typeof(float) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightSmoothWithWater), new[] { typeof(float), typeof(float), typeof(bool), typeof(float) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightWithWater), new[] { typeof(float), typeof(float), typeof(bool), typeof(float) })),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawSurface))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 - 1), (int)(120 * bf * 9 - 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleWaterData))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SetDetailedPatch), new[] { typeof(int), typeof(int) })),
                     new() {
                         { 481 * 481, (int)((480 * df + 1) * (480 * df + 1)) },
-                        { 480 * 480, (int)(480 * df * 480 * df) }
+                        { 480 * 480, (int)(480 * df * 480 * df) },
+                        { 120, (int)(120 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SetHeightMap))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 120, (int)(120 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SetHeightMap8))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 120, (int)(120 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SetHeightMap16))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 120, (int)(120 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SetRawHeightMap))),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 120, (int)(120 * bf) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), "SimulationStepImpl")),
+                    new() {
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 120, (int)(120 * bf) }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.UpdateBounds))),
                     new() {
                         { 4, 4 + dp }, // patch rendering levels
-                        { 144, (int)(144 * df)} //?
+                        { 144, (int)(144 * df) }, //?
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.UpdateData))),
+                    new() {
+                        { (120), (int)(120 * bf) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.WaterLevel))),
+                    new() {
+                        { (120), (int)(120 * bf) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainModify), nameof(TerrainModify.ApplyQuad), new[] { typeof(UnityEngine.Vector2), typeof(UnityEngine.Vector2), typeof(UnityEngine.Vector2), typeof(UnityEngine.Vector2), typeof(ItemClass.Zone), typeof(bool), typeof(float), typeof(UnityEngine.Vector2), typeof(UnityEngine.Vector2), typeof(UnityEngine.Vector2), typeof(int), typeof(int), typeof(int), typeof(int) })),
                     new() {
-                        { 2, 2 + dp }
+                        { 2, 2 + dp - bp }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainModify), nameof(TerrainModify.ApplyQuad), new[] { typeof(ColossalFramework.Math.Quad2), typeof(TerrainModify.Edges), typeof(TerrainModify.Surface) })),
                     new() {
-                        { 2, 2 + dp }
+                        { 2, 2 + dp - bp }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainModify), nameof(TerrainModify.UpdateArea), new[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(bool), typeof(bool), typeof(bool) })),
+                    new() {
+                        { 2, 2 + dp - bp },
+                        { 120, (int)(120 * bf) },
+                        { 8, (int)(8 * bf) }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainModify), "UpdateAreaImplementation")),
                     new() {
-                        { 2, 2 + dp },
-                        { 4, (int)(4 * df) },
+                        { 2, 2 + dp - bp },
+                        { 120, (int)(120 * bf) },
+                        { 128, (int)(128 * bf) },
+                        { (120 * 9), (int)(120 * bf * 9) },
+                        { (120 * 9 + 1), (int)(120 * bf * 9 + 1) },
+                        { 4, (int)(4 * df / bf) },
                         { 480, (int)(480 * df) },
                         { 479, (int)(480 * df - 1) },
                         { 481, (int)(480 * df + 1) }
@@ -156,6 +436,10 @@ namespace DetailedTerrain.Patches {
                 {
                     DebugValue(AccessTools.Constructor(typeof(TerrainPatch), new Type[] { typeof(int), typeof(int) })),
                     new() {
+                        { 120, (int)(120 * bf) },
+                        { 128, (int)(128 * bf) },
+                        { 128 + 1, (int)(128 * bf + 1) },
+                        { (120 * 9), (int)(120 * bf * 9) },
                         { 480, (int)(480 * df) },
                         { 512, (int)(512 * df) }
                     }
@@ -179,27 +463,112 @@ namespace DetailedTerrain.Patches {
             };
             floatMap = new() {
                 {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateAreaHeight))),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 540f * (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateWaterFlow))),
+                    new() {
+                        { 16f, 16f / (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CalculateWaterProximity))),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.CountWaterCoverage))),
+                    new() {
+                        { 16f, 16f / (float)bf }
+                    }
+                },
+                {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetBlockHeight))),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetClosestWaterPos))),
+                    new() {
+                        { 16f, 16f / (float)bf }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetDetailHeight))),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetDetailHeightSmooth))),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetShorePos))),
+                    new() {
+                        { 16f, 16f / (float)bf }
                     }
                 },
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.GetSurfaceCell))),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.HasWater), new[] { typeof(UnityEngine.Vector2) })),
+                    new() {
+                        { 16f, 16f * (float)bf } //!!
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.HasWater), new[] { typeof(ColossalFramework.Math.Segment2), typeof(float), typeof(bool) })),
+                    new() {
+                        { 16f, 16f / (float)bf }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.RayCast))),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), "RayCastEdge")),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeightSmooth), new[] { typeof(UnityEngine.Vector3) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeightSmoothWithWater), new[] { typeof(UnityEngine.Vector3), typeof(bool), typeof(float) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleBlockHeightSmoothWithWater), new[] { typeof(UnityEngine.Vector3), typeof(bool), typeof(float), typeof(bool).MakeByRefType() })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
                     }
                 },
                 {
@@ -220,7 +589,7 @@ namespace DetailedTerrain.Patches {
                 {
                     DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleDetailHeight), new[] { typeof(float), typeof(float) })),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
                     }
                 },
                 {
@@ -241,6 +610,46 @@ namespace DetailedTerrain.Patches {
                     new() {
                         { 4f, 4f / (float)df },
                         { 480f * 4.5f, 480f * (float)df * 4.5f },
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleOriginalRawHeightSmooth), new[] { typeof(UnityEngine.Vector3) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightSmooth), new[] { typeof(UnityEngine.Vector3) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightSmoothWithWater), new[] { typeof(UnityEngine.Vector3), typeof(bool), typeof(float) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleRawHeightWithWater), new[] { typeof(UnityEngine.Vector3), typeof(bool), typeof(float) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.SampleWaterData))),
+                    new() {
+                        { 16f, 16f * (float)bf } //!!
+                    }
+                },
+                {
+                    DebugValue(AccessTools.Method(typeof(TerrainManager), nameof(TerrainManager.WaterLevel))),
+                    new() {
+                        { 16f, 16f * (float)bf } //!!
                     }
                 },
                 {
@@ -266,18 +675,28 @@ namespace DetailedTerrain.Patches {
                     }
                 },
                 {
+                    DebugValue(AccessTools.Method(typeof(TerrainModify), nameof(TerrainModify.UpdateArea), new[] { typeof(float), typeof(float), typeof(float), typeof(float), typeof(bool), typeof(bool), typeof(bool) })),
+                    new() {
+                        { 16f, 16f / (float)bf },
+                        { 540f, 120f * (float)bf * 4.5f }
+                    }
+                },
+                {
                     DebugValue(AccessTools.Method(typeof(TerrainModify), "UpdateAreaImplementation")),
                     new() {
-                        { 0.25f, 0.25f / (float)df }
+                        { 0.25f, 0.25f / (float)df * (float)bf }
                     }
                 },
                 {
                     DebugValue(AccessTools.Constructor(typeof(TerrainPatch), new Type[] { typeof(int), typeof(int) })),
                     new() {
+                        { 16f, 16f / (float)bf },
+                        { 1f / 128f, 1f / 128f / (float)bf },
+                        { 1f / 128f / 2f, 1f / 128f / 2f / (float)bf },
+                        { 128f, 128f * (float)bf },
                         { 4f, 4f / (float)df },
                         { 1f / 512f, 1f / 512f / (float)df },
                         { 1f / 512f / 2f, 1f / 512f / 2f / (float)df },
-                        { 480f, 480f * (float)df },
                         { 512f, 512f * (float)df }
                     }
                 },
@@ -396,11 +815,12 @@ namespace DetailedTerrain.Patches {
             Log.DebugCalled();
             var codes = codesEnumerable.ToList();
             int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
-            //int f = 1 << p;
-            float df = UnityEngine.Mathf.Pow(2, dp);
+            float df = DetailedTerrain.GUI.ModSettings.settings.detailedMeshFactor;
+            int bp = DetailedTerrain.GUI.ModSettings.settings.baseMeshPower;
+            float bf = DetailedTerrain.GUI.ModSettings.settings.baseMeshFactor;
             for (int i = 0; i < codes.Count; i++) {
                 var code = codes[i];
-                // / 4f : used to scale from world to detailed coords^; involved in sdf computation
+                // / 4f : used to scale from world to detailed coords; involved in sdf computation
                 if (code.Is(OpCodes.Ldc_R4, 4f)) {
                     code.operand = 4f / (float)df;
                     // also used to scale some stuff in height modification, keep those
@@ -423,6 +843,10 @@ namespace DetailedTerrain.Patches {
                     }
 
                 }
+                // 1080 : map size in base coords
+                else if (code.Is(OpCodes.Ldc_I4, 1081)) {
+                    code.operand = (int)(1080 * bf + 1);
+                }
                 // 2160f : map center in detailed coords
                 else if (code.Is(OpCodes.Ldc_R4, 2160f)) {
                     code.operand = 2160f * (float)df;
@@ -431,10 +855,14 @@ namespace DetailedTerrain.Patches {
                 else if (code.Is(OpCodes.Ldc_R4, 5.656854f)) {
                     code.operand = 5.656854f / (float)df;
                 }
+                //16 * sqrt(2)
+                else if (code.Is(OpCodes.Ldc_R4, 22.6274166f)) {
+                    code.operand = 22.6274166f / (float)bf;
+                }
                 // 2 : left- and right-shift used instead of *4 and /4 to translate between detailed and undetailed coords
                 else if (code.opcode == OpCodes.Ldc_I4_2) {
                     if (codes[i + 1].opcode == OpCodes.Shl || codes[i + 1].opcode == OpCodes.Shr || codes[i + 1].opcode == OpCodes.Shr_Un) {
-                        code = CodeInstructionExtensions.LoadConstant(2 + dp);
+                        code = CodeInstructionExtensions.LoadConstant(2 + dp - bp);
                     }
                 }
 
@@ -463,17 +891,37 @@ namespace DetailedTerrain.Patches {
             Log.DebugCalled();
             var codes = codesEnumerable.ToList();
             int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
-            //int f = 1 << p;
-            float df = UnityEngine.Mathf.Pow(2, dp);
+            float df = DetailedTerrain.GUI.ModSettings.settings.detailedMeshFactor;
+            int bp = DetailedTerrain.GUI.ModSettings.settings.baseMeshPower;
+            float bf = DetailedTerrain.GUI.ModSettings.settings.baseMeshFactor;
             for (int i = 0; i < codes.Count; i++) {
                 var code = codes[i];
-                // 480: default detail mesh size per tile
-                if (code.Is(OpCodes.Ldc_I4, 480)) {
+                if (code.LoadsConstant(120)) {
+                    code = CodeInstructionExtensions.LoadConstant((int)(120 * bf));
+                } else if (code.LoadsConstant(16f)) {
+                    code = CodeInstructionExtensions.LoadConstant(16f / (float)bf);
+                } else if (code.LoadsConstant(64)) {
+                    if (codes[i + 1].opcode != OpCodes.Sub) {
+                        code = CodeInstructionExtensions.LoadConstant((int)(64 * bf));
+                    }
+                } else if (code.LoadsConstant(120 * 9)) {
+                    code = CodeInstructionExtensions.LoadConstant((int)(120 * 9 * bf));
+                } else if (code.LoadsConstant(120 * 9 + 1)) {
+                    code = CodeInstructionExtensions.LoadConstant((int)(120 * 9 * bf + 1));
+                } else if (code.LoadsConstant(120 * 9 - 1)) {
+                    code = CodeInstructionExtensions.LoadConstant((int)(120 * 9 * bf - 1));
+                }
+                 // 480: default detail mesh size per tile
+                 else if (code.Is(OpCodes.Ldc_I4, 480)) {
                     code.operand = (int)(480 * df);
                 }
                  // 0.001953125f : 1/512 somehow related to normals scaling
                  else if (code.Is(OpCodes.Ldc_R4, 0.001953125f)) {
                     code.operand = 1f / 512f * (float)df;
+                }
+                 // 0.00048828125f : 1/2048 somehow related to normals scaling
+                 else if (code.Is(OpCodes.Ldc_R4, 0.00048828125f)) {
+                    code.operand = 1f / 2048f * (float)bf;
                 }
                  // 256: half texture size
                  else if (code.Is(OpCodes.Ldc_I4, 256)) {
@@ -486,7 +934,7 @@ namespace DetailedTerrain.Patches {
                  // 2 : left- and right-shift used instead of *4 and /4 to translate between detailed and undetailed coords in TerrainPatch::Refresh
                  else if (code.opcode == OpCodes.Ldc_I4_2) {
                     if (codes[i + 1].opcode == OpCodes.Shl || codes[i + 1].opcode == OpCodes.Shr || codes[i + 1].opcode == OpCodes.Shr_Un) {
-                        code = CodeInstructionExtensions.LoadConstant(2 + dp);
+                        code = CodeInstructionExtensions.LoadConstant(2 + dp - bp);
                     }
                 }
                  // 4320: map size in detailed coords
@@ -522,9 +970,9 @@ namespace DetailedTerrain.Patches {
     [HarmonyDebug]
 #endif
     [HarmonyPriority(Priority.Last)]
-class ReplaceTerrainPatchRenderSubPatchDetailConstantsPatch {
+    class ReplaceTerrainPatchRenderSubPatchDetailConstantsPatch {
         static T DebugValue<T>(T value) {
-#if DEBUG   
+#if DEBUG
             UnityEngine.Debug.Log(value);
 #endif
             return value;
@@ -537,14 +985,15 @@ class ReplaceTerrainPatchRenderSubPatchDetailConstantsPatch {
             Log.DebugCalled();
             var codes = codesEnumerable.ToList();
             int dp = DetailedTerrain.GUI.ModSettings.settings.detailedMeshPower;
-            //int f = 1 << p;
-            float df = UnityEngine.Mathf.Pow(2, dp);
+            float df = DetailedTerrain.GUI.ModSettings.settings.detailedMeshFactor;
+            int bp = DetailedTerrain.GUI.ModSettings.settings.baseMeshPower;
+            float bf = DetailedTerrain.GUI.ModSettings.settings.baseMeshFactor;
             for (int i = 0; i < codes.Count; i++) {
                 var code = codes[i];
                 // 480: default detail mesh size per tile
                 if (code.LoadsConstant(3)) {
-                   code = CodeInstructionExtensions.LoadConstant(3 + dp);
-                }else if(code.LoadsConstant(4) && codes[i+1].IsLdarg(method, "level")){
+                    code = CodeInstructionExtensions.LoadConstant(3 + dp);
+                } else if (code.LoadsConstant(4) && codes[i + 1].IsLdarg(method, "level")) {
                     code = CodeInstructionExtensions.LoadConstant(4 + dp);
                 }
                 yield return code;
